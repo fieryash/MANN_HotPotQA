@@ -10,6 +10,91 @@ This project implements a hybrid **Memory-Augmented Neural Network (MANN)** for 
 
 ---
 
+## Structured Code and Streamlit App
+
+This repo now includes a small Python package and a Streamlit UI built from the notebook logic.
+
+Project layout:
+
+```
+mann_hotpotqa/
+  __init__.py
+  data.py          # retrieval, tokenization, dataset, collate
+  model.py         # NTM memory and AdvancedMANN_QA
+  train_utils.py   # loss, train/eval loops (AMP)
+  inference.py     # load/save checkpoints, ask_question
+scripts/
+  train.py         # CLI to preprocess+train+save checkpoint
+app.py             # Streamlit UI for inference
+requirements.txt
+Dockerfile
+```
+
+### Setup
+
+```
+python -m venv .venv
+source .venv/bin/activate  # (Windows: .venv\Scripts\Activate)
+pip install -r requirements.txt
+```
+
+### Train
+
+```
+python scripts/train.py \
+  --epochs 3 --batch_size 32 \
+  --base_model bert-base-uncased \
+  --hidden_dim 128 --memory_size 32 --memory_dim 64 \
+  --train_cache ./cache/hotpot_train --val_cache ./cache/hotpot_val \
+  --checkpoint ./checkpoints/mann_hotpotqa.ckpt
+```
+
+This will download HotpotQA (distractor), preprocess with BM25 top-k, train, and save a checkpoint.
+
+### Run Streamlit UI
+
+```
+streamlit run app.py
+```
+
+In the sidebar, either load the saved checkpoint (`./checkpoints/mann_hotpotqa.ckpt`) or build a fresh model (not fine-tuned).
+
+---
+
+## Deployment Options
+
+- Docker (local or any VM):
+  - Build: `docker build -t mann-hotpotqa .`
+  - Run: `docker run -p 8501:8501 mann-hotpotqa`
+  - Open: http://localhost:8501
+
+- Streamlit Community Cloud:
+  - Push this repo to GitHub
+  - Create a new app pointing to `app.py`
+  - Set Python version and `requirements.txt`
+
+- Hugging Face Spaces (Streamlit):
+  - Create a Space (type: Streamlit)
+  - Upload the repo (or point to it)
+  - Set `app.py` as entry and include `requirements.txt`
+
+- AWS EC2 / Azure VM / GCP VM:
+  - Provision a GPU/CPU VM
+  - Install Docker and run the image as above, or
+  - Install Python + requirements and run `streamlit run app.py`
+  - Use a reverse proxy (Nginx) for HTTPS if public
+
+- GCP Cloud Run / AWS App Runner:
+  - Use the provided `Dockerfile`
+  - Configure service to expose port `8501`
+
+- FastAPI + Uvicorn (API-only, optional):
+  - Wrap model loading and `ask_question` into FastAPI endpoints
+  - Containerize and deploy behind your preferred platform (Cloud Run, ECS, etc.)
+
+Model artifact to deploy: `./checkpoints/mann_hotpotqa.ckpt` (contains model weights and config; tokenizer path is stored too).
+
+
 ## 🧠 Key Highlights
 
 - **Dataset**: HotpotQA (distractor setting)
