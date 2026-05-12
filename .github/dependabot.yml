@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    allow:
+      - dependency-type: "direct"
+    automerged_updates:
+      - match:
+          update_type: "semver:patch"
+      - match:
+          update_type: "semver:minor"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    automerged_updates:
+      - match:
+          update_type: "semver:patch"
+      - match:
+          update_type: "semver:minor"
